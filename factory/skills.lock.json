@@ -1,0 +1,132 @@
+{
+  "source": "https://github.com/mattpocock/skills",
+  "commit": "4ae2317",
+  "commitDate": "2026-10-31",
+  "version": "1.3.2",
+  "pinnedAt": "2026-11-06T16:45:33.936Z",
+  "checkedAt": "2026-11-06T17:37:11.030Z",
+  "ignored": [],
+  "skills": {
+    "code-review": {
+      "path": "skills/engineering/code-review",
+      "hash": "cd5bdf2afe1680d1",
+      "usedBy": [
+        "auditor",
+        "reviewer"
+      ]
+    },
+    "codebase-design": {
+      "path": "skills/engineering/codebase-design",
+      "hash": "61f4936a45f334e8",
+      "usedBy": [
+        "planner",
+        "implementer",
+        "auditor"
+      ]
+    },
+    "diagnosing-bugs": {
+      "path": "skills/engineering/diagnosing-bugs",
+      "hash": "29faf0d352422aa5",
+      "usedBy": [
+        "implementer"
+      ]
+    },
+    "domain-modeling": {
+      "path": "skills/engineering/domain-modeling",
+      "hash": "18a9314d338b8135",
+      "usedBy": [
+        "discovery",
+        "planner"
+      ]
+    },
+    "grilling": {
+      "path": "skills/productivity/grilling",
+      "hash": "27f71f106a706269",
+      "usedBy": [
+        "discovery",
+        "planner"
+      ]
+    },
+    "pr": {
+      "path": "skills/engineering/pr",
+      "hash": "fd6364a4c6714b49",
+      "usedBy": [
+        "reviewer"
+      ]
+    },
+    "tdd": {
+      "path": "skills/engineering/tdd",
+      "hash": "aaed5857190bc808",
+      "usedBy": [
+        "implementer",
+        "tester"
+      ]
+    },
+    "to-spec": {
+      "path": "skills/engineering/to-spec",
+      "hash": "f525dab8b9bd3961",
+      "usedBy": [
+        "discovery",
+        "planner"
+      ]
+    },
+    "to-tickets": {
+      "path": "skills/engineering/to-tickets",
+      "hash": "6eccfac132d92b94",
+      "usedBy": [
+        "discovery",
+        "planner"
+      ]
+    },
+    "grill-with-docs": {
+      "path": "skills/engineering/grill-with-docs",
+      "hash": "2dff19547f0f7200",
+      "usedBy": [
+        "discovery"
+      ]
+    },
+    "research": {
+      "path": "skills/engineering/research",
+      "hash": "f2d6425b15cf3100",
+      "usedBy": [
+        "discovery"
+      ]
+    },
+    "prototype": {
+      "path": "skills/engineering/prototype",
+      "hash": "c4efd5e0f1c302b6",
+      "usedBy": [
+        "discovery"
+      ]
+    },
+    "retro": {
+      "path": "skills/engineering/retro",
+      "hash": "09c4f9fe72fc5bc8",
+      "usedBy": [
+        "retro"
+      ]
+    },
+    "writing-for-agents": {
+      "path": "skills/productivity/writing-for-agents",
+      "hash": "dc53f07d1f662137",
+      "usedBy": [
+        "retro"
+      ]
+    }
+  },
+  "reviewed": [
+    "ask-matt",
+    "grill-me",
+    "handoff",
+    "implement",
+    "implement-spec",
+    "improve-codebase-architecture",
+    "setup-matt-pocock-skills",
+    "teach",
+    "to-questionnaire",
+    "triage",
+    "wait-what",
+    "wayfinder",
+    "wizard"
+  ]
+}

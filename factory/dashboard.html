@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Factory Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F7; --rail:#E7ECEF; --surface:#FFFFFF; --tile:#EEF2F4; --tile-hover:#E4EAEE;
+  --ink:#17212B; --ink-2:#44505D; --ink-3:#5F6B78;
+  --line:#DCE2E6; --line-2:#C3CCD3;
+  --run:#1D56C9; --run-soft:#E6EDFB;
+  --ok:#22744A; --ok-soft:#E2F1E8;
+  --bad:#B33A26; --bad-soft:#F9E7E3;
+  --wait:#8C5A0D; --wait-soft:#F7EDD8;
+  --idle:#C3CBD2; --idle-soft:#EDF1F3;
+  --r-sm:4px; --r-md:8px;
+  --font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  accent-color:var(--run);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--ink);font:14px/1.6 var(--font);font-variant-numeric:tabular-nums;scrollbar-color:var(--line-2) transparent}
+::selection{background:var(--run-soft);color:var(--ink)}
+a{color:var(--run);text-underline-offset:3px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--run);outline-offset:2px;border-radius:var(--r-sm)}
+.muted{color:var(--ink-3)}
+bdi{unicode-bidi:isolate}
+svg.ic{width:14px;height:14px;flex:none;vertical-align:-2px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{background:var(--rail);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:22px 12px}
+.brand{padding:0 10px;font-weight:700;font-size:15px;white-space:nowrap}
+.brand span{display:block;font-weight:500;font-size:13px;color:var(--ink-3);white-space:normal}
+.nav{margin-top:24px;display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:var(--r-sm);color:var(--ink-2);text-decoration:none;font-weight:500}
+.nav a:hover{background:rgba(23,33,43,.05);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--surface);color:var(--ink);font-weight:600}
+.nav .cnt{font-size:12px;color:var(--ink-3);font-weight:500}
+.nav .cnt.alert{color:var(--bad);font-weight:600}
+.side-foot{margin-top:auto;padding:0 10px;font-size:12px;color:var(--ink-3);line-height:1.7}
+.live{display:flex;gap:8px;align-items:baseline;color:var(--ink);font-size:13px;margin-bottom:4px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--idle);display:inline-block}
+.dot.run{background:var(--run)} .dot.wait{background:var(--wait)} .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+@media (prefers-reduced-motion:no-preference){.dot.pulse{animation:pulse 1.6s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.35}}
+
+.main{min-width:0;padding:22px 28px 56px}
+.now{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 16px;border-radius:var(--r-md);background:var(--surface);margin-bottom:22px}
+.now.run{background:var(--run-soft)} .now.wait{background:var(--wait-soft)} .now.fin{background:var(--ok-soft)}
+.now b{font-size:15px;font-weight:600}
+.now .sub{color:var(--ink-2);font-size:13px}
+.now .dot{align-self:center}
+h2{font-size:19px;margin:0;line-height:1.35}
+h3{font-size:15px;margin:0 0 4px}
+.lead{color:var(--ink-2);margin:4px 0 18px;max-width:75ch}
+.crumbs{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-3);margin-bottom:6px}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--run);text-decoration:underline}
+
+/* ---------- project + feature tiles ---------- */
+.project{background:var(--surface);border-radius:var(--r-md);padding:26px 28px 28px}
+.project-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px 32px;align-items:flex-start}
+.project-head h2{font-size:22px}
+.project-head p{margin:4px 0 0;color:var(--ink-2);max-width:68ch}
+.phase{display:flex;flex-wrap:wrap;gap:4px;font-size:12px}
+.phase span{white-space:nowrap;padding:3px 10px;border-radius:999px;color:var(--ink-3);background:var(--idle-soft)}
+.phase span.done{color:var(--ok);background:var(--ok-soft)}
+.phase span.now-ph{color:#fff;background:var(--ink);font-weight:600}
+.facts{display:flex;flex-wrap:wrap;gap:8px 36px;margin:22px 0 26px;padding:0;list-style:none}
+.facts li{display:flex;flex-direction:column}
+.facts b{font-size:20px;font-weight:600;line-height:1.3}
+.facts span{font-size:12px;color:var(--ink-3)}
+.feat-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.feat-title h3{margin:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:var(--r-md);background:var(--tile);text-align:start;transition:background-color .15s ease-out}
+.tile:hover{background:var(--tile-hover)}
+.tile:focus-visible{outline:2px solid var(--run);outline-offset:2px}
+.tile .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tile .fid{font-size:12px;font-weight:600;color:var(--ink-3)}
+.tile .nm{font-size:15px;font-weight:600;line-height:1.4}
+.tile .ds{font-size:13px;color:var(--ink-2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.seg{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--idle-soft);gap:2px}
+.seg i{display:block;height:100%}
+.tile .meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink-3)}
+.tile .st{font-size:13px;display:flex;align-items:center;gap:6px}
+.st.run{color:var(--run);font-weight:600} .st.ok{color:var(--ok)} .st.bad{color:var(--bad);font-weight:600} .st.wait{color:var(--wait);font-weight:600}
+.empty-tiles{padding:20px;border-radius:var(--r-md);background:var(--tile);color:var(--ink-2)}
+
+/* ---------- feature kanban ---------- */
+.fhead{display:flex;flex-wrap:wrap;gap:12px 32px;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+.fhead .facts{margin:0}
+.board-wrap{overflow-x:auto;background:var(--surface);border-radius:var(--r-md)}
+.board{display:grid;grid-template-columns:repeat(7,minmax(160px,1fr));min-width:1120px}
+.stn{position:relative;padding:14px 12px 12px;border-bottom:1px solid var(--line)}
+.stn + .stn{border-inline-start:1px solid var(--line)}
+.stn.on{background:var(--run-soft)}
+.stn .nm{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
+.stn .who{font-size:12px;color:var(--ink-2);margin-top:2px;line-height:1.45}
+.stn .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.tag{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--idle-soft);color:var(--ink-2);white-space:nowrap}
+.stn.on .tag{background:var(--surface)}
+.stn .doing{font-size:12px;color:var(--run);font-weight:600;margin-top:6px}
+.gate-mark{position:absolute;inset-inline-end:-7px;bottom:-7px;z-index:2;width:13px;height:13px;transform:rotate(45deg);background:var(--surface);border:1.5px solid var(--ink-3)}
+.gate-mark.fail{border-color:var(--bad);background:var(--bad-soft)}
+.gate-mark.pass{border-color:var(--ok);background:var(--ok-soft)}
+.col{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:180px}
+.col + .col{border-inline-start:1px solid var(--line)}
+.col .none{font-size:12px;color:var(--ink-3);padding:6px 2px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 11px;font-size:13px;transition:border-color .15s ease-out}
+.card:hover{border-color:var(--line-2)}
+.card:focus-visible{outline:2px solid var(--run);outline-offset:1px}
+.card.running{background:var(--run-soft);border-color:transparent}
+.card.blocked{background:var(--wait-soft);border-color:transparent}
+.card .hd{display:flex;justify-content:space-between;gap:6px;color:var(--ink-3);font-size:12px}
+.card .ti{font-weight:600;line-height:1.45}
+.card .wh{color:var(--ink-2);font-size:12px;line-height:1.5}
+.card .ft{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--ink-3)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--idle-soft);color:var(--ink-2);white-space:nowrap;width:max-content;max-width:100%}
+.pill.run{background:var(--run-soft);color:var(--run)} .card.running .pill.run{background:var(--surface)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.wait{background:var(--wait-soft);color:var(--wait)} .card.blocked .pill.wait{background:var(--surface)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--ink-2);margin-top:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .dia{width:9px;height:9px;transform:rotate(45deg);border:1.5px solid var(--ink-3);background:var(--surface)}
+
+/* ---------- shared panels ---------- */
+.panel{background:var(--surface);border-radius:var(--r-md);padding:18px 20px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 36px;background:var(--surface);border-radius:var(--r-md);padding:16px 20px;margin-bottom:16px}
+.stat .v{font-size:20px;font-weight:600}
+.stat .v small{font-size:13px;font-weight:400;color:var(--ink-3)}
+.stat .l{font-size:13px;color:var(--ink-2)}
+.stat .h{font-size:12px;color:var(--ink-3)}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:start;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+th{font-weight:600;color:var(--ink-3);font-size:12px;white-space:nowrap}
+td.n{white-space:nowrap}
+.hb{display:grid;grid-template-columns:150px minmax(0,1fr) 110px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.hb .tr{height:8px;background:var(--idle-soft);border-radius:4px;overflow:hidden}
+.hb .tr i{display:block;height:100%;background:var(--ink-2);border-radius:4px}
+.hb .v{text-align:end;color:var(--ink-2)}
+.ev{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.ev:last-child{border:none}
+.ev .t{color:var(--ink-3)}
+.ev.bad .s{color:var(--bad)} .ev.ok .s{color:var(--ok)} .ev.warn .s{color:var(--wait)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.filters button{border:none;background:var(--surface);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:13px;color:var(--ink-2)}
+.filters button:hover{background:var(--tile-hover)}
+.filters button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.lessons{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.lessons ol{margin:8px 0 0;padding-inline-start:20px}
+.lessons li{margin-bottom:10px}
+.lessons li .src{display:block;font-size:12px;color:var(--ink-3)}
+.gates{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.gate{padding:14px 16px;border-radius:var(--r-md);background:var(--surface);font-size:13px}
+.gate b{display:block;font-size:14px}
+.gate .k{font-size:12px;color:var(--ink-3)}
+.gate .c{margin-top:6px;font-weight:600}
+.empty{color:var(--ink-3);padding:6px 0}
+
+/* flow diagram */
+svg.flow{width:100%;height:auto;display:block}
+svg.flow.vert{max-width:380px;margin-inline:auto}
+svg text{font-family:var(--font);fill:var(--ink)}
+.nd rect,.nd path.shape{stroke-width:2}
+.n-pending rect,.n-pending path.shape{fill:var(--idle-soft);stroke:var(--idle)}
+.n-running rect,.n-running path.shape{fill:var(--run-soft);stroke:var(--run);stroke-width:2.5}
+.n-pass rect,.n-pass path.shape{fill:var(--ok-soft);stroke:var(--ok)}
+.n-fail rect,.n-fail path.shape{fill:var(--bad-soft);stroke:var(--bad)}
+.n-wait rect,.n-wait path.shape{fill:var(--wait-soft);stroke:var(--wait)}
+.nd .stt{font-size:12px;font-weight:600}
+.n-pending .stt{fill:var(--ink-3)}.n-running .stt{fill:var(--run)}.n-pass .stt{fill:var(--ok)}.n-fail .stt{fill:var(--bad)}.n-wait .stt{fill:var(--wait)}
+.nd .md{font-size:11px;fill:var(--ink-3)}
+.e{fill:none;stroke-width:2.5}
+.e-idle{stroke:var(--idle);stroke-dasharray:5 5}.e-done{stroke:var(--ok)}
+.e-active{stroke:var(--run);stroke-width:3;stroke-dasharray:10 6}
+@media (prefers-reduced-motion:no-preference){.e-active{animation:flow .8s linear infinite}}
+@keyframes flow{to{stroke-dashoffset:-16}}
+.r{fill:none;stroke-width:2}.r-idle{stroke:var(--idle);opacity:.6;stroke-dasharray:3 5}
+.r-hot{stroke:var(--bad)}.r-plan{stroke:var(--wait)}.r-used{stroke:var(--bad);opacity:.5}
+.rl{font-size:11px;font-weight:600}.rl-hot{fill:var(--bad)}.rl-plan{fill:var(--wait)}.rl-idle{fill:var(--ink-3)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(23,33,43,.28);z-index:20}
+.drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;width:min(560px,100%);background:var(--surface);z-index:21;overflow-y:auto;padding:24px 26px 40px;box-shadow:-16px 0 40px rgba(23,33,43,.14)}
+.drawer h3{margin:0;font-size:18px;line-height:1.45}
+.drawer .sub{margin:4px 0 0;color:var(--ink-3);font-size:13px}
+.drawer h4{margin:22px 0 8px;font-size:13px;color:var(--ink-2)}
+.drawer .close{position:absolute;top:16px;inset-inline-start:16px;border:none;background:var(--tile);border-radius:999px;padding:3px 12px;cursor:pointer}
+.drawer .close:hover{background:var(--tile-hover)}
+.track{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12px}
+.chip{padding:2px 9px;border-radius:999px;background:var(--idle-soft);color:var(--ink-3);white-space:nowrap}
+.chip.pass{background:var(--ok-soft);color:var(--ok)}
+.chip.fail{background:var(--bad-soft);color:var(--bad)}
+.chip.running{background:var(--run-soft);color:var(--run);font-weight:600}
+.track .ic{color:var(--ink-3);width:12px;height:12px}
+.crit{margin:0;padding-inline-start:20px}
+.crit li{margin-bottom:4px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px;margin:0}
+.kv dt{color:var(--ink-3)} .kv dd{margin:0}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:sticky;top:0;z-index:10;height:auto;flex-direction:row;align-items:center;gap:14px;padding:10px 16px;overflow-x:auto}
+  .brand span{display:none}
+  .nav{flex-direction:row;margin:0}
+  .nav a{white-space:nowrap;padding:6px 10px}
+  .side-foot{display:none}
+  .main{padding:16px 16px 48px}
+  .project{padding:20px 18px}
+  .grid2{grid-template-columns:1fr}
+  .hb{grid-template-columns:96px minmax(0,1fr) 84px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">مصنع البرمجيات<span id="brandProject"></span></div>
+    <nav class="nav" id="nav" aria-label="أقسام اللوحة"></nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+  <main class="main" id="main" tabindex="-1">
+    <div id="now"></div>
+    <div id="view"><p class="muted">جاري تحميل بيانات المصنع من factory/data.js</p></div>
+  </main>
+</div>
+<div id="drawerRoot"></div>
+
+<script>
+// ---------- vocabulary ----------
+const AG = {
+  orchestrator:{n:"الموجّه", r:"يمرر العمل بين الوكلاء بالترتيب الذي يحدده المصنع، ويستدعيك عند التوقف"},
+  discovery:{n:"جلسة الاكتشاف", r:"تسألك مباشرة، ثم تكتب المواصفات والمهام في نفس الجلسة"},
+  planner:{n:"المخطط", r:"يعدّل الخطة حين يثبت أنها خاطئة"},
+  "test-writer":{n:"كاتب الاختبارات", r:"يكتب اختبارات القبول قبل الكود، ثم تُقفل"},
+  implementer:{n:"المنفذ", r:"يكتب الكود حتى تنجح الاختبارات المقفلة"},
+  gate:{n:"البوابة الآلية", r:"فحوص بالكود بعد كل تنفيذ"},
+  testgate:{n:"بوابة الاختبارات", r:"تتحقق من الاختبارات وتقفلها"},
+  tester:{n:"الفاحص", r:"يشغّل كل شيء ويجرّب كل معيار قبول"},
+  auditor:{n:"المدقق", r:"يراجع معايير الكود وجودته"},
+  reviewer:{n:"المراجع", r:"يطابق المهمة مع المواصفات"},
+  "final-reviewer":{n:"المراجع النهائي", r:"يراجع المشروع كاملًا ويكتب وصف التسليم"},
+  diagnoser:{n:"المشخّص", r:"يعيد إنتاج الخطأ ويجد سببه ويكتب اختبارًا يثبته قبل الإصلاح"},
+  retro:{n:"وكيل التحسين", r:"يدرس ما حدث في المشروع ويقترح تحسينات للمصنع، ويطبّق ما توافق عليه فقط"},
+};
+const SKILLS = {discovery:"grill-with-docs، to-spec، to-tickets، prototype، research", planner:"grilling، domain-modeling، to-spec، to-tickets", "test-writer":"tdd، codebase-design", implementer:"tdd، codebase-design، diagnosing-bugs", tester:"tdd", auditor:"code-review (المعايير)", reviewer:"code-review (المواصفات)", "final-reviewer":"code-review، pr", retro:"retro، writing-for-agents", diagnoser:"diagnosing-bugs، tdd", orchestrator:"—"};
+const EFFORT = {low:"تفكير منخفض", medium:"تفكير متوسط", high:"تفكير عالٍ", xhigh:"تفكير عالٍ جدًا", max:"أقصى تفكير"};
+const LLM = ["planner","test-writer","diagnoser","implementer","tester","auditor","reviewer","final-reviewer","retro"];
+const STAGES = ["test-writer","implementer","gate","tester","auditor","reviewer"];
+const stagesFor = t => t?.type==="bug" ? ["diagnoser",...STAGES.slice(1)] : STAGES;
+const COLS = [
+  {key:"planner",  agent:"planner",        title:"مخطّطة"},
+  {key:"test-writer", agent:"test-writer", title:"اختبارات القبول", gate:"testgate"},
+  {key:"implementer", agent:"implementer", title:"التنفيذ", gate:"gate"},
+  {key:"tester",   agent:"tester",         title:"الفحص"},
+  {key:"auditor",  agent:"auditor",        title:"التدقيق"},
+  {key:"reviewer", agent:"reviewer",       title:"المراجعة"},
+  {key:"done",     agent:"final-reviewer", title:"منجزة"},
+];
+const PHASES = [["planning","الاكتشاف والتخطيط"],["building","بناء الميزات"],["final","المراجعة النهائية"],["retro","تحسين المصنع"],["finished","التسليم"]];
+const VIEWS = [["features","المشروع والميزات"],["flow","مسار الإنتاج"],["agents","الوكلاء"],["tokens","التوكنز"],["lessons","الدروس"],["improve","تحسين المصنع"],["log","سجل الأحداث"],["safety","الحماية والمهارات"]];
+
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const bdi = s => `<bdi dir="auto">${esc(s)}</bdi>`;
+const fmt = n => !n ? "0" : n>=1e6 ? (n/1e6).toFixed(2)+" مليون" : n>=1e3 ? (n/1e3).toFixed(1)+" ألف" : String(n);
+const hm = iso => iso ? new Date(iso).toLocaleTimeString("ar",{hour:"2-digit",minute:"2-digit"}) : "";
+const dur = ms => !ms ? "" : ms<60000 ? Math.max(1,Math.round(ms/1000))+" ث" : ms<3600000 ? Math.round(ms/60000)+" د" : (ms/3600000).toFixed(1)+" س";
+// drawn icon (chevron pointing in the reading direction of an RTL flow)
+const chev = () => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>`;
+
+// route: #features | #feature/F1 | #flow | ...
+let route = parseRoute();
+let openTicket = null, logFilter = "all", lastFocus = null;
+function parseRoute(){
+  const h = decodeURIComponent(location.hash.slice(1));
+  if(h.startsWith("feature/")) return {view:"feature", feature:h.slice(8)};
+  return {view: VIEWS.some(v=>v[0]===h) ? h : "features"};
+}
+addEventListener("hashchange", ()=>{ route = parseRoute(); openTicket = null; document.getElementById("drawerRoot").innerHTML = ""; render(); document.getElementById("main").focus({preventScroll:true}); scrollTo(0,0); });
+
+// ---------- derived data ----------
+function model(D){
+  const {state:S, usage:U, config:C} = D;
+  const runs = Object.values(U?.runs||{});
+  const ar = runs.filter(r=>LLM.includes(r.agent));
+  const tok = rs => rs.reduce((a,r)=>a+(r.total||0),0);
+  const T = id => S.tickets.find(t=>t.id===id);
+  const tName = id => id==="plan" ? "الخطة" : id==="final" ? "المشروع كاملًا" : T(id) ? `المهمة ${id} «${T(id).title}»` : `المهمة ${id}`;
+  const feats = (S.features||[]).slice();
+  S.tickets.forEach(t=>{ if(t.feature && !feats.some(f=>f.id===t.feature)) feats.push(t.feature==="BUGS" ? {id:"BUGS",name:"إصلاح الأخطاء",description:"أخطاء أبلغت عنها. كل خطأ يشخّصه المشخّص ويثبته باختبار قبل أن يُصلح."} : {id:t.feature,name:t.feature,description:""}); });
+  if(S.tickets.some(t=>!t.feature)) feats.push({id:"none",name:"مهام بلا ميزة",description:""});
+  const LS = D.lessons||{};
+  return {S,U,C,D,runs,ar,tok,T,tName,feats,LS, cur:S.current, pend:S.pending, maxA:C.maxAttempts??3,
+    fTickets: f => S.tickets.filter(t=>(t.feature||"none")===f.id),
+    lessonCount:Object.values(LS).reduce((a,b)=>a+Object.keys(b).length,0),
+    repeats:S.events.filter(e=>e.type==="lesson_repeat").length};
+}
+
+// the diagnoser and the test-writer share the second column of a feature board
+function cardState(M,t){ const s = cardState0(M,t); if(s.col==="diagnoser") s.col = "test-writer"; return s; }
+function cardState0(M,t){
+  if(t.status==="done") return {cls:"done", pill:"ok", col:"done", text:`منجزة${t.startedAt&&t.finishedAt?` في ${dur(Date.parse(t.finishedAt)-Date.parse(t.startedAt))}`:""}`};
+  if(t.status==="skipped") return {cls:"done", pill:"", col:"done", text:"مُتخطاة بقرارك"};
+  if(t.status==="pending"){
+    const waiting = t.blockedBy.filter(b=>M.T(b)?.status!=="done");
+    return {cls:"planned", pill:"", col:"planner", text: waiting.length ? `تبدأ بعد ${waiting.map(b=>"#"+b).join(" و")}` : "التالية في الدور"};
+  }
+  if(t.status==="blocked") return {cls:"blocked", pill:"wait", col:t.stage, text:"تنتظر قرارك"};
+  if(M.cur?.ticket===t.id) return {cls:"running", pill:"run", col:M.cur.agent==="diagnoser"?"test-writer":M.cur.agent, text:`${AG[M.cur.agent].n} يعمل عليها`};
+  if(t.attempt>1 && t.lastRejection && (t.stage==="implementer"||t.stage==="test-writer"||t.stage==="diagnoser"))
+    return {cls:"rework", pill:"bad", col:t.stage, text:`أعادها ${AG[t.lastRejection.agent]?.n||""}`};
+  return {cls:"queued", pill:"", col:t.stage, text:"في انتظار الوكيل"};
+}
+
+// feature summary used by the tile and the feature page
+function featureInfo(M,f){
+  const ts = M.fTickets(f);
+  const st = ts.map(t=>cardState(M,t));
+  const n = k => st.filter(s=>s.cls===k).length;
+  const done = n("done"), running = n("running"), rework = n("rework"), blocked = n("blocked"), queued = n("queued"), planned = n("planned");
+  const runT = ts.find(t=>cardState(M,t).cls==="running");
+  const status = blocked ? ["wait", `${blocked} مهمة تنتظر قرارك`]
+    : runT ? ["run", `${AG[M.cur.agent].n} يعمل على #${runT.id}`]
+    : ts.length && done===ts.length ? ["ok","مكتملة"]
+    : rework ? ["bad", `${rework} مهمة أُعيدت للتصحيح`]
+    : done || queued ? ["", "قيد البناء"] : ["", "لم تبدأ"];
+  const returns = M.S.events.filter(e=>ts.some(t=>t.id===e.ticket) && (e.type==="fail"||e.type==="gate_fail"||e.type==="fail_tests"||e.type==="dispute")).length;
+  return {ts, done, running, rework, blocked, queued, planned, status, returns, tokens: M.tok(M.ar.filter(r=>ts.some(t=>t.id===r.ticket)))};
+}
+
+// ---------- shell ----------
+function render(){
+  const D = window.FACTORY; if(!D) return;
+  const M = model(D);
+  const keep = { board: document.querySelector(".board-wrap")?.scrollLeft, drawer: document.querySelector(".drawer")?.scrollTop };
+  renderNav(M); renderNow(M);
+  const v = document.getElementById("view");
+  const fn = {features:viewFeatures, feature:viewFeature, flow:viewFlow, agents:viewAgents, tokens:viewTokens, lessons:viewLessons, improve:viewImprove, log:viewLog, safety:viewSafety}[route.view];
+  v.innerHTML = fn(M);
+  if(route.view==="flow") document.getElementById("flowbox").innerHTML = flowSVG(M);
+  bind(M);
+  if(keep.board != null && document.querySelector(".board-wrap")) document.querySelector(".board-wrap").scrollLeft = keep.board;
+  if(openTicket){ renderDrawer(M, true); if(keep.drawer != null && document.querySelector(".drawer")) document.querySelector(".drawer").scrollTop = keep.drawer; }
+}
+
+function renderNav(M){
+  document.getElementById("brandProject").textContent = M.S.project;
+  const active = route.view==="feature" ? "features" : route.view;
+  const waitingRetro = M.pend?.type==="retro_review";
+  const counts = {features:`<bdi dir="ltr">${M.feats.filter(f=>f.id!=="none").length}</bdi> ميزات`, lessons:M.lessonCount||"", improve: waitingRetro ? "ينتظرك" : (M.S.retro?.proposals?.length||""), log:M.S.events.filter(e=>e.type!=="start").length, safety:M.S.events.filter(e=>e.type==="violation").length||""};
+  const alert = {lessons:M.repeats>0, safety:M.S.events.some(e=>e.type==="violation"), improve:waitingRetro};
+  document.getElementById("nav").innerHTML = VIEWS.map(([k,l])=>`<a href="#${k}" ${k===active?'aria-current="page"':""}><span>${l}</span><span class="cnt${alert[k]?" alert":""}">${counts[k]??""}</span></a>`).join("");
+  const p = M.pend, c = M.cur;
+  const [cls, txt] = M.S.phase==="discovery" && !p ? ["run","جلسة الاكتشاف جارية"] : p ? ["wait","متوقف وينتظرك"] : M.S.phase==="finished" ? ["ok","اكتمل المشروع"] : c ? ["run",`${AG[c.agent].n} يعمل على ${c.ticket==="plan"?"الخطة":c.ticket==="final"?"المشروع":"#"+c.ticket}`] : ["","جاهز للخطوة التالية"];
+  document.getElementById("sideFoot").innerHTML = `<div class="live"><span class="dot ${cls} ${cls==="run"?"pulse":""}"></span><span>${txt}</span></div><div>آخر تحديث ${hm(M.D.generatedAt)}، وتتحدث اللوحة تلقائيًا</div>`;
+}
+
+function renderNow(M){
+  const {S,pend,cur,maxA} = M;
+  let big, sub = "", cls = "";
+  if(S.phase==="discovery" && !pend){
+    cls = "run"; big = "جلسة الاكتشاف جارية: الأسئلة معك، ثم المواصفات والمهام";
+    sub = `تعمل في جلسة منفصلة <bdi dir="ltr">claude --agent discovery</bdi> على ${esc((M.C.models||{}).discovery||"opus")}، ${EFFORT[(M.C.effort||{}).discovery]||""}`;
+  } else if(pend){
+    cls = "wait";
+    big = pend.type==="bug_info" ? `المشخّص يحتاج معلومات منك ليعيد إنتاج ${M.tName(pend.ticket)}`
+        : pend.type==="retro_review" ? `وكيل التحسين يقترح ${S.retro?.proposals?.length||""} تحسينات للمصنع وينتظر قرارك`
+        : pend.type==="questions" ? "المخطط يحتاج إجاباتك قبل كتابة الخطة"
+        : pend.type==="violation" ? `وكيل خالف صلاحياته في ${M.tName(pend.ticket)}`
+        : pend.type==="blocked" ? `${M.tName(pend.ticket)} استنفدت محاولاتها وتحتاج قرارك`
+        : "المصنع متوقف وينتظر قرارك";
+    sub = `ردّ على الموجّه في المحادثة.${pend.file?` التفاصيل في ${esc(pend.file)}`:""}`;
+  } else if(S.phase==="finished"){ cls = "fin"; big = "اكتمل المشروع ونجح في كل البوابات والمراجعة النهائية"; sub = "وصف التسليم في factory/PR.md"; }
+  else if(cur){
+    cls = "run";
+    const t = M.T(cur.ticket);
+    const verb = {planner:cur.mode==="revise"?"يعدّل الخطة بسبب ملاحظة على":"يكتب الخطة لـ","test-writer":t?.disputeFrom?"يدرس اعتراض المنفذ على اختبارات":"يكتب اختبارات القبول لـ",diagnoser:"يشخّص",implementer:"يبني",tester:"يفحص",auditor:"يدقق جودة",reviewer:"يراجع مطابقة","final-reviewer":"يراجع"}[cur.agent];
+    big = cur.agent==="retro" ? (cur.mode==="apply" ? "وكيل التحسين يطبّق التحسينات التي وافقت عليها" : "وكيل التحسين يدرس ما حدث في المشروع ليقترح تحسينات للمصنع")
+      : `${AG[cur.agent].n} ${verb} ${cur.ticket==="plan"?"المشروع":M.tName(cur.ticket)}`;
+    sub = [t?`المحاولة ${cur.attempt} من ${maxA}`:"", `${esc(cur.model||"")}${cur.effort?`، ${EFFORT[cur.effort]||cur.effort}`:""}`, `منذ ${hm(cur.startedAt)}`].filter(Boolean).join("، ");
+  } else big = "المصنع جاهز للخطوة التالية";
+  document.getElementById("now").innerHTML = `<div class="now ${cls}" role="status">${cls?`<span class="dot ${cls==="fin"?"ok":cls} ${cls==="run"?"pulse":""}"></span>`:""}<b>${big}</b>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
+}
+
+// ---------- project and feature tiles ----------
+function viewFeatures(M){
+  const {S,feats} = M;
+  const pi = PHASES.findIndex(p=>p[0]===(S.phase==="discovery"?"planning":S.phase));
+  const done = S.tickets.filter(t=>t.status==="done").length;
+  const fReal = feats.filter(f=>f.id!=="none");
+  const fDone = fReal.filter(f=>{const ts=M.fTickets(f);return ts.length&&ts.every(t=>t.status==="done"||t.status==="skipped");}).length;
+  const total = M.tok(M.ar) + (M.U.main?.total||0) + (M.U.discovery?.total||0);
+  const tiles = feats.map(f=>{
+    const I = featureInfo(M,f), n = I.ts.length || 1;
+    const seg = [[I.done,"var(--ok)"],[I.rework+I.blocked,"#D98B7D"],[I.running+I.queued,"#AFC3EC"]].filter(x=>x[0]).map(([v,c])=>`<i style="width:${v/n*100}%;background:${c}"></i>`).join("");
+    return `<a class="tile" href="#feature/${encodeURIComponent(f.id)}" aria-label="ميزة ${esc(f.name)}: ${I.done} من ${I.ts.length} مهام منجزة، ${esc(I.status[1])}">
+      <div class="top"><span class="fid">${f.id==="none"||f.id==="BUGS"?"":esc(f.id)}</span><span class="muted" style="font-size:12px">${I.ts.length} مهام</span></div>
+      <div class="nm">${esc(f.name)}</div>
+      ${f.description?`<div class="ds">${esc(f.description)}</div>`:""}
+      <div class="seg" role="img" aria-label="${I.done} منجزة من ${I.ts.length}">${seg}</div>
+      <div class="meta"><span>${I.done} من ${I.ts.length} منجزة</span><span>${fmt(I.tokens)} توكن</span></div>
+      <div class="st ${I.status[0]}">${I.status[0]?`<span class="dot ${I.status[0]} ${I.status[0]==="run"?"pulse":""}"></span>`:""}${esc(I.status[1])}</div></a>`;
+  }).join("");
+  const emptyMsg = S.phase==="discovery" ? "لا توجد ميزات بعد. تظهر هنا حين تنهي جلسة الاكتشاف المواصفات والمهام." : "لا توجد ميزات بعد. تظهر هنا حين تُكتب الخطة.";
+  return `<section class="project" aria-labelledby="pTitle">
+    <div class="project-head"><div><h2 id="pTitle">${esc(S.project)}</h2>${S.description?`<p>${esc(S.description)}</p>`:""}</div>
+      <div class="phase" aria-label="مرحلة المشروع">${PHASES.map((p,i)=>`<span class="${i<pi?"done":i===pi?"now-ph":""}">${p[1]}</span>`).join("")}</div></div>
+    <ul class="facts">
+      <li><b>${fDone} من ${fReal.length}</b><span>ميزات مكتملة</span></li>
+      <li><b>${done} من ${S.tickets.length}</b><span>مهام منجزة</span></li>
+      <li><b>${S.events.filter(e=>["fail","gate_fail","fail_tests","dispute"].includes(e.type)).length}</b><span>مرات أُعيد فيها العمل</span></li>
+      <li><b>${M.lessonCount}</b><span>درسًا تعلّمه الوكلاء</span></li>
+      <li><b>${fmt(total)}</b><span>توكن حتى الآن</span></li>
+    </ul>
+    <div class="feat-title"><h3>الميزات</h3><span class="muted" style="font-size:13px">اضغط ميزة لترى لوحة مهامها</span></div>
+    ${feats.length?`<div class="tiles">${tiles}</div>`:`<div class="empty-tiles">${emptyMsg}</div>`}
+  </section>`;
+}
+
+// ---------- one feature's kanban ----------
+function viewFeature(M){
+  const f = M.feats.find(x=>x.id===route.feature);
+  if(!f) return `<div class="crumbs"><a href="#features">المشروع</a></div><div class="panel">هذه الميزة غير موجودة في الخطة الحالية.</div>`;
+  const I = featureInfo(M,f), {S,cur,C} = M;
+  const lastGate = kind => { const e=[...S.events].reverse().find(e=>e.agent===kind && I.ts.some(t=>t.id===e.ticket) && (e.type==="gate_pass"||e.type==="gate_fail")); return e ? (e.type==="gate_pass"?"pass":"fail") : ""; };
+  const hasBug = I.ts.some(t=>t.type==="bug"), hasFeat = I.ts.some(t=>t.type!=="bug");
+  const head = COLS.map(c0=>{
+    const c = c0.key==="test-writer" && hasBug ? {...c0, agent: hasFeat ? "test-writer" : "diagnoser", title: hasFeat ? "الاختبارات أو التشخيص" : "التشخيص"} : c0;
+    const on = cur && I.ts.some(t=>t.id===cur.ticket) && cur.agent===c.agent;
+    const n = I.ts.filter(t=>cardState(M,t).col===c.key).length;
+    const eff = (C.effort||{})[c.agent];
+    const who = c.key==="planner" ? {n:"مكتوبة في الخطة", r:"تنتظر أن يحين دورها"} : c.key==="done" ? {n:"اجتازت كل المحطات", r:""} : AG[c.agent];
+    return `<div class="stn ${on?"on":""}"><div class="nm">${on?'<span class="dot run pulse"></span>':""}${c.title} <span class="muted" style="font-weight:400;font-size:12px">${n}</span></div>
+      <div class="who">${c.key==="planner"||c.key==="done" ? esc(who.n) : `${who.n}: ${who.r}`}</div>
+      ${c.key!=="planner"&&c.key!=="done"?`<div class="tags"><span class="tag">${esc((C.models||{})[c.agent]||"")}</span>${eff?`<span class="tag">${EFFORT[eff]}</span>`:""}</div>`:""}
+      ${on?`<div class="doing">يعمل الآن على #${cur.ticket}</div>`:""}
+      ${c.gate?`<span class="gate-mark ${lastGate(c.gate)}" title="${AG[c.gate].n}: ${AG[c.gate].r}"></span>`:""}</div>`;
+  }).join("");
+  const cols = COLS.map(c=>{
+    const cards = I.ts.filter(t=>cardState(M,t).col===c.key).map(t=>card(M,t)).join("");
+    return `<div class="col">${cards || (c.key==="done" ? `<div class="none">لا شيء منجز بعد</div>` : "")}</div>`;
+  }).join("");
+  return `<nav class="crumbs" aria-label="المسار"><a href="#features">المشروع</a>${chev()}<span>${f.id==="none"||f.id==="BUGS"?"":esc(f.id)+" "}${esc(f.name)}</span></nav>
+    <div class="fhead"><div><h2>${esc(f.name)}</h2>${f.description?`<p class="lead" style="margin-bottom:0">${esc(f.description)}</p>`:""}</div>
+      <ul class="facts">
+        <li><b>${I.done} من ${I.ts.length}</b><span>مهام منجزة</span></li>
+        <li><b>${I.returns}</b><span>مرات أُعيد فيها العمل</span></li>
+        <li><b>${fmt(I.tokens)}</b><span>توكن</span></li>
+        <li><b class="st ${I.status[0]}" style="font-size:15px">${esc(I.status[1])}</b><span>الحالة</span></li>
+      </ul></div>
+    <div class="board-wrap"><div class="board">${head}${cols}</div></div>
+    <div class="legend"><span><span class="dot run"></span>يعمل الآن</span><span><span class="dot bad"></span>أُعيدت للتصحيح</span><span><span class="dot wait"></span>تنتظر قرارك</span><span><span class="dot ok"></span>منجزة</span><span><span class="dia"></span>بوابة كود بين محطتين</span></div>`;
+}
+
+function card(M,t){
+  const s = cardState(M,t);
+  const locked = t.locked && Object.keys(t.locked).length;
+  return `<button class="card ${s.cls}" data-ticket="${t.id}" aria-label="المهمة ${t.id}: ${esc(t.title)}، ${esc(s.text)}">
+    <div class="hd"><span>#${t.id}${t.type==="bug"?` <span class="pill bad" style="margin-inline-start:4px">خطأ</span>`:""}</span>${t.attempt>1?`<span>المحاولة ${t.attempt} من ${M.maxA}</span>`:""}</div>
+    <div class="ti">${esc(t.title)}</div>
+    ${t.what?`<div class="wh">${bdi(t.what)}</div>`:""}
+    <span class="pill ${s.pill}">${s.text}</span>
+    <div class="ft"><span>${t.criteria?.length||0} معايير قبول</span>${locked?"<span>اختبارات مقفلة</span>":t.testsSkipped?"<span>بلا اختبارات قبول</span>":""}</div></button>`;
+}
+
+// ---------- ticket drawer ----------
+function renderDrawer(M, refresh = false){
+  const t = M.T(openTicket); const root = document.getElementById("drawerRoot");
+  if(!t){ root.innerHTML = ""; return; }
+  const s = cardState(M,t);
+  const KEEP = ["pass","fail","gate_pass","gate_fail","fail_plan","fail_tests","dispute","violation","blocked","human","done"];
+  const evs = M.S.events.filter(e=>e.ticket===t.id && KEEP.includes(e.type));
+  const journey = evs.map(e=>{
+    const c = ["pass","gate_pass","done"].includes(e.type)?"pass":["fail","gate_fail","violation","blocked","fail_tests","dispute"].includes(e.type)?"fail":"";
+    const lbl = e.type==="done"?"منجزة":e.type==="human"?"قرارك":`${AG[e.agent]?.n||""}${e.attempt?` ${e.attempt}`:""}`;
+    const back = e.type==="gate_fail" ? (e.agent==="testgate"?"، أعادها لكاتب الاختبارات":"، أعادها للمنفذ") : e.type==="fail" ? "، أعادها للمنفذ" : e.type==="fail_tests" ? "، أعادها لكاتب الاختبارات" : e.type==="dispute" ? "، اعتراض" : e.type==="fail_plan" ? "، أعادها للمخطط" : "";
+    return `<span class="chip ${c}" title="${esc(e.summary||"")}">${lbl}${back}</span>`;
+  }).join(chev());
+  const track = stagesFor(t).map(a=>`<span class="chip ${t.stages[a]||""}">${AG[a].n}</span>`).join(chev());
+  const lessons = M.S.events.filter(e=>e.ticket===t.id && (e.type==="lesson"||e.type==="lesson_repeat"));
+  const reps = M.S.events.filter(e=>e.ticket===t.id && e.report && ["pass","fail","fail_tests","fail_plan","dispute","gate_fail","gate_pass"].includes(e.type));
+  const fe = M.feats.find(f=>f.id===(t.feature||"none"));
+  const byAgent = LLM.map(a=>[a, M.tok(M.ar.filter(r=>r.ticket===t.id && r.agent===a))]).filter(x=>x[1]);
+  root.innerHTML = `<div class="scrim" data-close></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <button class="close" data-close>إغلاق</button>
+    <h3 id="dTitle">#${t.id} ${bdi(t.title)}</h3>
+    <p class="sub">${fe?`ميزة ${esc(fe.name)}`:""}</p>
+    <p style="margin:10px 0 0"><span class="pill ${s.pill}">${s.text}</span></p>
+    <h4>المراحل</h4><div class="track">${track}</div>
+    <h4>المطلوب</h4>${t.what?`<p style="margin:0 0 6px">${bdi(t.what)}</p>`:""}${t.criteria?.length?`<ol class="crit">${t.criteria.map(c=>`<li>${bdi(c)}</li>`).join("")}</ol>`:'<span class="muted">لا معايير</span>'}
+    <h4>رحلة المهمة</h4><div class="track">${journey||'<span class="muted">لم تبدأ بعد</span>'}</div>
+    ${lessons.length?`<h4>ما تعلّمه الوكلاء منها</h4><ul class="crit">${lessons.map(e=>`<li><b>${AG[e.agent]?.n||esc(e.agent)}</b>: ${bdi(e.summary)} <span class="muted">(من ${AG[e.from]?.n||esc(e.from||"")}${e.type==="lesson_repeat"?"، خطأ متكرر":""})</span></li>`).join("")}</ul>`:""}
+    <h4>التفاصيل</h4><dl class="kv"><dt>المحاولة</dt><dd>${t.attempt} من ${M.maxA}</dd>
+      <dt>الاختبارات</dt><dd>${t.testsSkipped?"بلا اختبارات قبول":t.locked&&Object.keys(t.locked).length?`${Object.keys(t.locked).length} ملفات مقفلة`:"لم تُقفل بعد"}</dd>
+      <dt>تعتمد على</dt><dd>${t.blockedBy.length?t.blockedBy.map(b=>"#"+b).join("، "):"لا شيء"}</dd>
+      <dt>التوكنز</dt><dd>${byAgent.length?byAgent.map(([a,v])=>`${AG[a].n} ${fmt(v)}`).join("، "):"0"}</dd>
+      <dt>الملف</dt><dd>${esc(t.file)}</dd></dl>
+    ${reps.length?`<h4>التقارير</h4><ul class="crit">${reps.map(e=>`<li><a href="../${esc(e.report)}">${esc(e.report.split("/").pop())}</a> <span class="muted">${AG[e.agent]?.n||""}</span></li>`).join("")}</ul>`:""}
+  </aside>`;
+  root.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeDrawer);
+  if(!refresh) root.querySelector(".close").focus({preventScroll:true});
+}
+function closeDrawer(){ openTicket = null; document.getElementById("drawerRoot").innerHTML = ""; lastFocus?.focus?.(); }
+addEventListener("keydown", e=>{ if(e.key==="Escape" && openTicket) closeDrawer(); });
+
+function bind(M){
+  document.querySelectorAll("[data-ticket]").forEach(b=>b.onclick=()=>{ lastFocus = b; openTicket = b.dataset.ticket; renderDrawer(M); });
+  document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{ logFilter = b.dataset.filter; render(); });
+}
+
+// ---------- factory improvements (retro) ----------
+function viewImprove(M){
+  const {S} = M, r = S.retro, hist = M.D.retroHistory||[];
+  const SEV = {high:["عالية","bad"], medium:["متوسطة","wait"], low:["منخفضة",""]};
+  const STATUS = {proposed:["مقترح",""], accepted:["مقبول، يُطبَّق الآن","run"], applied:["طُبّق","ok"], rejected:["رفضته",""], "not-applied":["لم يُطبَّق","bad"], manual:["يحتاج تنفيذًا يدويًا","wait"]};
+  const CAT = {"automated-check":"فحص آلي","coding-standard":"معيار كود","agent-steering":"تعليمات وكيل","navigation":"دليل تنقّل","tool-economy":"توفير أدوات وتوكنز","factory-config":"إعدادات المصنع","information-access":"وصول للمعلومات","no-op":"حذف تعليمات بلا أثر"};
+  const head = `<h2>تحسين المصنع</h2><p class="lead">بعد اجتياز المراجعة النهائية يدرس وكيل التحسين ما حدث في المشروع: كل رفض، وكل بوابة فشلت، والدروس التي تكررت، والتوكنز. ثم يقترح تعديلات على بيئة المصنع نفسه، مثل فحص آلي جديد أو قاعدة أوضح في تعليمات وكيل. لا يُطبَّق أي مقترح إلا إذا وافقت عليه.</p>`;
+  let cur = "";
+  if(!r || r.status==="pending" && !(M.cur?.agent==="retro")){
+    cur = `<div class="panel empty">${S.phase==="retro" ? "وكيل التحسين على وشك البدء." : "يعمل وكيل التحسين بعد أن ينجح المشروع في المراجعة النهائية."}</div>`;
+  } else if(M.cur?.agent==="retro" && M.cur.mode==="propose"){
+    cur = `<div class="panel">وكيل التحسين يدرس ما حدث في المشروع الآن.</div>`;
+  } else if(!r.proposals.length){
+    cur = `<div class="panel">سار المشروع دون مشاكل تستحق تعديل المصنع، فلم يقترح وكيل التحسين شيئًا.</div>`;
+  } else {
+    cur = `<div class="panel tbl">${M.pend?.type==="retro_review"?`<p style="margin:0 0 12px"><span class="pill wait">ينتظر قرارك</span> ردّ على الموجّه في المحادثة بالمقترحات التي تقبلها.</p>`:""}
+      <table><thead><tr><th>المقترح</th><th>النوع</th><th>الأهمية</th><th>الدليل والتعديل</th><th>الملفات</th><th>الحالة</th></tr></thead><tbody>${
+      r.proposals.map(p=>{ const sv = SEV[p.severity]||[p.severity||"—",""], st = STATUS[p.status]||[p.status,""];
+        return `<tr><td><b>${esc(p.id)}</b> ${bdi(p.title)}</td><td class="n">${esc(CAT[p.category]||p.category||"—")}</td><td><span class="pill ${sv[1]}">${sv[0]}</span></td>
+          <td style="min-width:260px">${p.evidence?`<div>${bdi(p.evidence)}</div>`:""}${p.change?`<div class="muted" style="margin-top:4px">${bdi(p.change)}</div>`:""}</td>
+          <td style="font-size:12px">${p.targets.map(t=>`<bdi dir="ltr">${esc(t)}</bdi>`).join("<br>")}${p.manual?`<div class="muted">خارج بيئة المصنع، يُنفَّذ يدويًا</div>`:""}</td>
+          <td><span class="pill ${st[1]}">${st[0]}</span></td></tr>`; }).join("")}</tbody></table>
+      <p class="muted" style="margin:12px 0 0;font-size:12px">التقرير الكامل في factory/retro/propose.md، والأرقام التي بُني عليها في factory/retro/facts.md.</p></div>`;
+  }
+  const past = hist.filter(h=>h.project!==S.project);
+  const histPanel = hist.length ? `<div class="panel tbl"><h3>عبر المشاريع</h3><table><thead><tr><th>المشروع</th><th>التاريخ</th><th>مقترحات</th><th>طُبّق</th><th>رُفض</th></tr></thead><tbody>${
+    hist.slice().reverse().map(h=>`<tr><td>${esc(h.project)}</td><td class="n">${new Date(h.at).toLocaleDateString("ar")}</td><td class="n">${h.proposals.length}</td><td class="n">${h.proposals.filter(p=>p.status==="applied").length}</td><td class="n">${h.proposals.filter(p=>p.status==="rejected").length}</td></tr>`).join("")}</tbody></table></div>` : "";
+  return head + cur + (past.length || hist.length ? histPanel : "");
+}
+
+// ---------- production flow ----------
+function viewFlow(M){
+  const {S} = M;
+  const focus = (M.cur && M.T(M.cur.ticket) ? M.cur.ticket : null) || S.tickets.find(t=>t.status==="active")?.id || [...S.tickets].reverse().find(t=>t.status==="done")?.id;
+  M.focus = focus ? M.T(focus) : null;
+  return `<h2>مسار الإنتاج</h2><p class="lead">المسار الكامل ${M.focus?`للمهمة #${M.focus.id} «${esc(M.focus.title)}»`:"للمهمة"}. الأسهم المتصلة هي الطريق الطبيعي، والأسهم الحمراء رفض يعيد المهمة لمن أخطأ، والبرتقالية خطأ في الخطة.</p>
+    <div class="panel"><div id="flowbox"></div></div>
+    <div class="panel"><h3>آخر ما حدث</h3>${S.events.filter(e=>e.type!=="start").slice(-8).reverse().map(e=>evRow(M,e)).join("")}</div>`;
+}
+
+// ---------- agents ----------
+function viewAgents(M){
+  const {C,S,ar,tok,LS,cur} = M;
+  const esc2 = C.effortEscalation||{};
+  const rows = ["discovery","orchestrator",...LLM].map(a=>{
+    const rs = ar.filter(r=>r.agent===a), ev = S.events.filter(e=>e.agent===a);
+    const ok = ev.filter(e=>e.type==="pass").length;
+    const E = S.events, c = f => E.filter(f).length;
+    const received = {implementer: c(e=>(e.type==="fail"&&e.agent!=="implementer")||(e.type==="gate_fail"&&e.agent==="gate")),
+      "test-writer": c(e=>(e.type==="gate_fail"&&e.agent==="testgate")||e.type==="fail_tests"||e.type==="dispute"), planner: c(e=>e.type==="fail_plan")}[a];
+    const given = c(e=>e.agent===a && ["fail","fail_tests","fail_plan"].includes(e.type));
+    const result = (a==="orchestrator"||a==="discovery") ? (a==="discovery"&&S.plan?.mode==="interactive"&&S.plan.status==="done"?"سلّمت الخطة":"—") : received!=null ? `${ok} تسليم، رُفض عمله ${received}` : `${ok} موافقة، ${given} رفض`;
+    const on = a==="orchestrator" ? !!cur : a==="discovery" ? S.phase==="discovery" : cur?.agent===a;
+    const eff = (C.effort||{})[a];
+    const escal = esc2.enabled && (esc2.agents||[]).includes(a);
+    const t = a==="orchestrator" ? (M.U.main?.total||0) : a==="discovery" ? (M.U.discovery?.total||0) : tok(rs);
+    return `<tr><td><b>${AG[a].n}</b><div class="muted" style="font-size:12px">${AG[a].r}</div></td>
+      <td>${on?'<span class="pill run">يعمل</span>':'<span class="pill">خامل</span>'}</td>
+      <td class="n">${esc((C.models||{})[a]||"")}</td>
+      <td class="n">${eff?EFFORT[eff]:"—"}${escal?`<div class="muted" style="font-size:12px">يرتفع عند إعادة العمل حتى ${EFFORT[esc2.max]||esc2.max}</div>`:""}</td>
+      <td style="font-size:12px">${SKILLS[a]}</td>
+      <td class="n">${a==="orchestrator"||a==="discovery"?"جلسة رئيسية":rs.length}</td>
+      <td class="n">${result}</td>
+      <td class="n">${fmt(t)}</td>
+      <td class="n">${Object.keys(LS[a]||{}).length||"—"}</td></tr>`;
+  }).join("");
+  return `<h2>الوكلاء</h2><p class="lead">وكيل لكل مرحلة، ولكل وكيل مودل ومستوى تفكير يناسبان دقة مهمته. تُضبط من factory/config.json، والموجّه لا يستطيع تغييرهما لأن الحارس يرفض أي تشغيل لا يطابق ما حدده المصنع.</p>
+    <div class="panel tbl"><table><thead><tr><th>الوكيل</th><th>الحالة</th><th>المودل</th><th>مستوى التفكير</th><th>المهارات</th><th>مرات التشغيل</th><th>النتيجة</th><th>التوكنز</th><th>الدروس</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// ---------- tokens ----------
+function viewTokens(M){
+  const {ar,tok,feats,S,C,U,runs} = M;
+  const bars = rows => { const m = Math.max(1,...rows.map(r=>r[1])); const s = rows.reduce((a,r)=>a+r[1],0)||1;
+    return rows.map(([l,v])=>`<div class="hb"><div>${esc(l)}</div><div class="tr"><i style="width:${v/m*100}%"></i></div><div class="v">${fmt(v)} (${Math.round(v/s*100)}%)</div></div>`).join(""); };
+  const byF = [["الاكتشاف والتخطيط", tok(ar.filter(r=>r.agent==="planner")) + (U.discovery?.total||0)], ...feats.map(f=>[f.id?`${f.id} ${f.name}`:f.name, tok(ar.filter(r=>S.tickets.some(t=>(t.feature||null)===f.id&&t.id===r.ticket)&&r.agent!=="planner"))])];
+  if(ar.some(r=>r.agent==="final-reviewer")) byF.push(["المراجعة النهائية", tok(ar.filter(r=>r.agent==="final-reviewer"))]);
+  const byA = [["جلسة الاكتشاف", U.discovery?.total||0], ...LLM.map(a=>[AG[a].n, tok(ar.filter(r=>r.agent===a))]), ["الموجّه", U.main?.total||0]];
+  const models = [...new Set(runs.map(r=>r.model).filter(Boolean))].map(m=>[m, tok(runs.filter(r=>r.model===m))]);
+  const total = tok(ar) + (U.main?.total||0) + (U.discovery?.total||0);
+  const rr = runs.slice().sort((a,b)=>Date.parse(b.at)-Date.parse(a.at)).slice(0,40);
+  return `<h2>التوكنز</h2><p class="lead">الإجمالي ${fmt(total)} توكن، منها ${fmt(U.discovery?.total)} لجلسة الاكتشاف و${fmt(U.main?.total)} للموجّه. يُحسب كل تشغيل من سجل الوكيل بعد انتهائه، ويشمل الإدخال والإخراج والكاش.</p>
+    <div class="grid2"><div class="panel"><h3>حسب الميزة</h3>${bars(byF)}</div><div class="panel"><h3>حسب الوكيل</h3>${bars(byA)}</div></div>
+    <div class="panel"><h3>حسب المودل</h3>${models.length?bars(models):'<div class="empty">لا تشغيلات بعد</div>'}</div>
+    <div class="panel tbl"><h3>آخر التشغيلات</h3><table><thead><tr><th>الوقت</th><th>المهمة</th><th>الوكيل</th><th>المودل</th><th>إدخال</th><th>إخراج</th><th>كاش</th><th>المجموع</th></tr></thead><tbody>${
+      rr.map(r=>`<tr><td class="n">${hm(r.at)}</td><td class="n">${esc(r.ticket)}${r.attempt?`، محاولة ${r.attempt}`:""}</td><td class="n">${AG[r.agent]?.n||esc(r.agent)}</td><td class="n muted">${esc(r.model||"")}</td><td class="n">${fmt(r.input)}</td><td class="n">${fmt(r.output)}</td><td class="n">${fmt(r.cacheWrite+r.cacheRead)}</td><td class="n"><b>${fmt(r.total)}</b></td></tr>`).join("")||'<tr><td colspan="8" class="muted">لا تشغيلات بعد</td></tr>'}</tbody></table></div>`;
+}
+
+// ---------- lessons ----------
+function viewLessons(M){
+  const {LS} = M;
+  const agents = LLM.filter(a=>LS[a] && Object.keys(LS[a]).length);
+  const body = agents.length ? `<div class="lessons">${agents.map(a=>{
+    const items = Object.values(LS[a]).sort((x,y)=>y.count-x.count||y.lastSeen.localeCompare(x.lastSeen));
+    return `<div class="panel" style="margin:0"><h3>${AG[a].n}</h3><div class="muted" style="font-size:12px">${items.length} درس في factory/lessons/${a}.md</div><ol>${items.map(x=>
+      `<li>${x.count>1?`<span class="pill bad">تكرر ${x.count} مرات</span> `:""}${bdi(x.text)}<span class="src">من ${AG[x.from]?.n||esc(x.from||"")}، في ${x.tickets.map(t=>"#"+t).join(" و")}</span></li>`).join("")}</ol></div>`;}).join("")}</div>`
+    : `<div class="panel empty">لا دروس بعد. كل رفض سيضيف هنا درسًا للوكيل الذي أخطأ.</div>`;
+  return `<h2>الدروس</h2><p class="lead">كل رفض يشرح أين الخطأ وكيف يُصلح، ويترك درسًا عامًا للوكيل الذي أخطأ. يقرأ الوكيل دروسه قبل كل تشغيل، وتبقى للمشاريع القادمة. الخطأ الذي يتكرر يُعدّ ويُرفض فورًا.</p>${body}`;
+}
+
+// ---------- log ----------
+function viewLog(M){
+  const groups = {all:null, rejections:["fail","gate_fail","fail_tests","fail_plan","dispute","violation","blocked"], lessons:["lesson","lesson_repeat"], human:["questions","human","blocked","violation"], done:["done","finished","pass","gate_pass"]};
+  const names = {all:"الكل", rejections:"الرفض", lessons:"الدروس", human:"قراراتك", done:"النجاح"};
+  const evs = M.S.events.filter(e=>e.type!=="start" && (!groups[logFilter] || groups[logFilter].includes(e.type))).slice().reverse();
+  return `<h2>سجل الأحداث</h2><p class="lead">كل انتقال بين الوكلاء، الأحدث أولًا. السجل الكامل في factory/log.md.</p>
+    <div class="filters" role="group" aria-label="تصفية الأحداث">${Object.keys(names).map(k=>`<button data-filter="${k}" aria-pressed="${k===logFilter}">${names[k]}</button>`).join("")}</div>
+    <div class="panel">${evs.map(e=>evRow(M,e)).join("")||'<div class="empty">لا أحداث في هذا التصنيف.</div>'}</div>`;
+}
+
+function evRow(M,e){
+  const a = AG[e.agent]?.n||esc(e.agent||""), from = AG[e.from]?.n||esc(e.from||"");
+  const raw = e.summary||""; const s = raw && !["answered","retry","skip"].includes(raw) ? bdi(raw) : esc(raw);
+  const T = M.tName;
+  const map = {
+    init:["","بدأ المشروع"],
+    pass:["ok", e.agent==="discovery" ? `جلسة الاكتشاف سلّمت الخطة للمصنع: ${s}` : e.agent==="planner" ? `المخطط أنهى ${e.ticket==="plan"?"الخطة":"تعديل الخطة"}: ${s}` : e.agent==="test-writer" ? `كاتب الاختبارات سلّم اختبارات ${T(e.ticket)}: ${s}` : e.agent==="diagnoser" ? `المشخّص وجد سبب ${T(e.ticket)} وأثبته باختبار يفشل: ${s}` : `${a} وافق على ${T(e.ticket)}${s?`: ${s}`:""}`],
+    gate_pass:["ok", `${e.agent==="testgate"?"بوابة الاختبارات تحققت من اختبارات":"البوابة الآلية مرّرت"} ${T(e.ticket)}`],
+    gate_fail:["bad", e.agent==="testgate" ? `بوابة الاختبارات رفضت اختبارات ${T(e.ticket)} وأعادتها لكاتب الاختبارات: ${s}` : `البوابة الآلية رفضت ${T(e.ticket)} وأعادتها للمنفذ: ${s}`],
+    fail:["bad", e.agent==="implementer" ? `المنفذ لم يستطع إنجاز ${T(e.ticket)}: ${s}` : `${a} رفض ${T(e.ticket)} وأعادها للمنفذ: ${s}`],
+    fail_tests:["bad", `${a} وجد خللًا في اختبارات ${T(e.ticket)} وأعادها لكاتب الاختبارات: ${s}`],
+    dispute:["warn", `المنفذ اعترض على اختبار في ${T(e.ticket)} وأحاله لكاتب الاختبارات: ${s}`],
+    fail_plan:["warn", `${a} وجد خطأً في خطة ${T(e.ticket)} وأعادها للمخطط: ${s}`],
+    lesson:["", `درس جديد لـ${a} من ${from}: ${s}`],
+    lesson_repeat:["bad", `${a} كرر خطأً سبق أن تعلّمه، ونبّهه ${from}: ${s}`],
+    questions:["warn", `المخطط يحتاج إجاباتك: ${s}`],
+    blocked:["bad", `${T(e.ticket)} توقفت بعد استنفاد المحاولات وتنتظر قرارك`],
+    violation:["bad", `${a} خالف صلاحياته في ${T(e.ticket)}: ${s}`],
+    human:["warn", `قرارك: ${raw==="answered"?"أجبت على الأسئلة":raw==="retry"?"إعادة المحاولة":raw==="skip"?"تخطي المهمة":s}`],
+    done:["ok", `اكتملت ${T(e.ticket)}`],
+    finished:["ok", "اكتمل المشروع"],
+    bug_reported:["warn", `خطأ جديد أُبلغ عنه وصار ${T(e.ticket)}: ${s}`],
+    bug_info:["warn", `المشخّص لم يستطع إعادة إنتاج ${T(e.ticket)} ويحتاج معلومات منك: ${s}`],
+    retro_proposed:["", `وكيل التحسين درس المشروع: ${s}`],
+    retro_decision:["warn", `قرارك في مقترحات التحسين: ${s}`],
+    retro_applied:["ok", `وكيل التحسين طبّق التحسينات المقبولة: ${s}`],
+  };
+  const [c,txt] = map[e.type]||["",esc(e.type)];
+  return `<div class="ev ${c}"><span class="t">${hm(e.ts)}</span><span class="s">${txt}${e.durationMs?` <span class="muted">(${dur(e.durationMs)})</span>`:""}</span></div>`;
+}
+
+// ---------- safety & skills ----------
+function viewSafety(M){
+  const {S,maxA} = M;
+  const n = (f) => S.events.filter(f).length;
+  const g = (k,name,desc,count) => `<div class="gate"><span class="k">${k}</span><b>${name}</b><div class="muted">${desc}</div>${count!==""?`<div class="c">${count}</div>`:""}</div>`;
+  const gates = [
+    g("كود","الحارس","يمنع قبل التنفيذ: الدفع إلى git، حذف المجلدات، إعادة كتابة التاريخ، قراءة الأسرار.",""),
+    g("كود","تحكم الموجّه","لا يُشغَّل وكيل إلا إذا كان الخطوة التي حددها المصنع، بنفس المودل ومستوى التفكير والتعليمات.",""),
+    g("كود","بوابة الاختبارات","لكل معيار اختبار، والاختبارات تفشل قبل التنفيذ، ثم تُقفل ببصمة.",`${n(e=>e.agent==="testgate"&&e.type==="gate_fail")} رفض`),
+    g("كود","قفل الاختبارات","المنفذ لا يعدّل اختبارات القبول، وإن رآها خاطئة يعترض.",`${n(e=>e.type==="dispute")} اعتراض`),
+    g("كود","البوابة الآلية","commit موجود، لا ملفات معلقة، لا اختبار محذوف أو معطّل أو أُضعف، وكل الفحوص ناجحة.",`${n(e=>e.agent==="gate"&&e.type==="gate_fail")} رفض`),
+    g("كود","حارس الصلاحيات","كل وكيل يكتب في مكانه فقط، والمراجعون لا يغيّرون أي ملف.",`${n(e=>e.type==="violation")} مخالفة`),
+    g("كود","سجل الدروس","كل رفض يترك درسًا للوكيل المخطئ، والتكرار يُكشف.",`${M.lessonCount} درس، ${M.repeats} تكرار`),
+    g("كود","حد المحاولات",`${maxA} محاولات لكل مهمة ثم يتوقف المصنع ويسألك.`,`${S.tickets.filter(t=>t.status==="blocked").length} متوقفة`),
+    g("وكلاء","ثلاث مراجعات صارمة","الفاحص: هل يعمل؟ المدقق: هل هو نظيف؟ المراجع: هل هو المطلوب؟",`${n(e=>["fail","fail_tests"].includes(e.type))} رفض`),
+    g("إنسان","أنت","الأسئلة قبل التخطيط والقرار عند كل توقف. لا شيء يُدفع للخارج بدونك.",`${n(e=>e.type==="human")} تدخل`),
+  ].join("");
+  return `<h2>الحماية والمهارات</h2><p class="lead">ما يمنع الوكلاء من الخطأ أو التصرف العشوائي، مع عدد المرات التي عملت فيها كل بوابة في هذا المشروع.</p>
+    <div class="gates" style="margin-bottom:16px">${gates}</div>${skillsPanel(M.D.skills)}`;
+}
+
+function skillsPanel(sk){
+  const L = sk?.lock, S = sk?.status;
+  if(!L) return `<div class="panel"><h3>مهارات Matt Pocock</h3><div class="empty">لا يوجد ملف قفل. شغّل node factory/scripts/update-skills.mjs pin</div></div>`;
+  const ups = S?.updates?.length||0;
+  const latest = S?.latest?.commit && S.latest.commit!==L.commit;
+  const [bl,bc] = ups ? [`${ups} تحديث متاح`,"wait"] : latest ? ["إصدار أحدث متاح","wait"] : S ? ["آخر إصدار","ok"] : ["لم تُفحص بعد",""];
+  const who = u => (u||[]).map(a=>AG[a]?.n||a).join("، ")||"—";
+  const rows = Object.entries(L.skills).map(([n,s])=>{
+    const up = S?.updates?.find(x=>x.skill===n), ed = S?.localEdits?.includes(n);
+    return `<tr><td><b>${esc(n)}</b></td><td>${esc(who(s.usedBy))}</td><td>${up?'<span class="pill wait">تحديث متاح</span>':ed?'<span class="pill bad">معدّلة محليًا</span>':'<span class="pill ok">مطابقة</span>'}</td></tr>`;}).join("");
+  return `<div class="panel tbl"><h3>مهارات Matt Pocock <span class="pill ${bc}">${bl}</span></h3>
+    <p class="lead">النسخة المثبتة ${esc(L.commit)} بتاريخ ${esc(L.commitDate)}، الإصدار ${esc(L.version)}. لا تُحدَّث أثناء مشروع قيد التنفيذ، وكل تحديث يُسجَّل في factory/skills-changelog.md.</p>
+    ${S?.newSkills?.length?`<p><b>مهارات جديدة نشرها Matt:</b> ${S.newSkills.map(n=>`${esc(n.skill)} (${bdi(n.description)})`).join("، ")}</p>`:""}
+    <table><thead><tr><th>المهارة</th><th>يستخدمها</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// ---------- flow diagram (overview) ----------
+function flowSVG(M){
+  const {S,C} = M, F = M.focus;
+  const box = document.getElementById("flowbox");
+  const wide = box.clientWidth >= 720;
+  const nodes = ["planner",...stagesFor(F),"done"];
+  const cur = S.current, pend = S.pending;
+  const ST = {pending:"في الانتظار",running:"يعمل الآن",pass:"نجح",fail:"رفض",wait:"ينتظرك",skipped:"لم يُشغَّل"};
+  const status = n => {
+    if(n==="planner"){ if(cur?.agent==="planner"||S.phase==="discovery") return "running"; if(pend?.type==="questions"||S.planRevision) return "wait"; return S.plan?.status==="done"?"pass":"pending"; }
+    if(!F) return "pending";
+    if(n==="done") return F.status==="done"?"pass":F.status==="blocked"?"wait":"pending";
+    return F.stages?.[n]||"pending";
+  };
+  const label = (n,s) => n==="done" ? (s==="pass"?"اكتملت":s==="wait"?"تنتظرك":"لم تكتمل") : ST[s];
+  const sub = n => n==="gate" ? "فحوص بالكود" : n==="done" ? "" : `${(C.models||{})[n]||""}${(C.effort||{})[n]?`، ${EFFORT[(C.effort||{})[n]].replace("تفكير ","")}`:""}`;
+  const evs = F ? S.events.filter(e=>e.ticket===F.id) : [];
+  const cnt = (type, agent) => evs.filter(e=>e.type===type && (!agent || e.agent===agent)).length;
+  const backs = {gate:cnt("gate_fail","gate"), tester:cnt("fail","tester"), auditor:cnt("fail","auditor"), reviewer:cnt("fail","reviewer")};
+  const failTests = cnt("fail_tests"), disputes = cnt("dispute"), testGateFails = cnt("gate_fail","testgate"), planBack = cnt("fail_plan");
+  const last = [...evs].reverse().find(e=>["fail","gate_fail","pass","fail_plan","fail_tests","dispute"].includes(e.type));
+  const hotFrom = last && F.stage==="implementer" && (last.type==="fail"||(last.type==="gate_fail"&&last.agent==="gate")) ? (last.type==="gate_fail"?"gate":last.agent) : null;
+  const hotTests = last && F.stage==="test-writer" && last.type==="fail_tests";
+  const hotDispute = last && F.stage==="test-writer" && last.type==="dispute";
+  const planHot = S.planRevision && F && S.planRevision.ticket===F.id;
+  const W = wide?1240:400, nw = wide?120:180, nh = wide?84:66, gap = wide?(W-80-nw)/(nodes.length-1):90, Y = wide?205:0;
+  const H = wide?410:50+gap*(nodes.length-1)+nh;
+  const pos = nodes.map((n,i)=> wide?{x:W-40-nw/2-i*gap,y:Y}:{x:210,y:25+nh/2+i*gap});
+  const P = Object.fromEntries(nodes.map((n,i)=>[n,pos[i]]));
+  let s = `<svg class="flow${wide?"":" vert"}" viewBox="0 0 ${W} ${H}" role="img" aria-label="مخطط مسار المهمة"><defs>`;
+  for(const [k,c] of [["idle","var(--idle)"],["ok","var(--ok)"],["acc","var(--run)"],["bad","var(--bad)"],["warn","var(--wait)"]])
+    s += `<marker id="m-${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`;
+  s += `</defs>`;
+  for(let i=0;i<nodes.length-1;i++){
+    const a=P[nodes[i]], b=P[nodes[i+1]], tgt=status(nodes[i+1]);
+    const cls = tgt==="running"?"e-active":tgt!=="pending"?"e-done":"e-idle", mk = cls==="e-active"?"acc":cls==="e-done"?"ok":"idle";
+    s += `<path class="e ${cls}" d="${wide?`M${a.x-nw/2},${a.y} L${b.x+nw/2+2},${b.y}`:`M${a.x},${a.y+nh/2} L${b.x},${b.y-nh/2-2}`}" marker-end="url(#m-${mk})"/>`;
+  }
+  const im = P.implementer;
+  ["gate","tester","auditor","reviewer"].forEach((n,k)=>{
+    const a=P[n], depth=38+k*24, c=backs[n]||0, cls = hotFrom===n?"r-hot":c?"r-used":"r-idle";
+    let d,lx,ly;
+    if(wide){ const y0=a.y+nh/2; d=`M${a.x},${y0} C${a.x},${y0+depth} ${im.x},${y0+depth} ${im.x+6},${y0+4}`; lx=(a.x+im.x)/2; ly=y0+depth*0.75+4; }
+    else { const x0=a.x-nw/2; d=`M${x0},${a.y} C${x0-depth},${a.y} ${x0-depth},${im.y} ${x0-4},${im.y+6}`; lx=x0-depth*0.75; ly=(a.y+im.y)/2; }
+    s += `<path class="r ${cls}" d="${d}" marker-end="url(#m-${cls==="r-idle"?"idle":"bad"})"/>`;
+    if(c||hotFrom===n) s += `<text class="rl ${cls==="r-idle"?"rl-idle":"rl-hot"}" x="${lx}" y="${ly}" text-anchor="middle">${wide?"رُفضت ":""}${c}×</text>`;
+  });
+  if(wide) s += `<text class="rl rl-idle" x="${(P.reviewer.x+im.x)/2}" y="${Y+nh/2+38+3*24+24}" text-anchor="middle">رفض التنفيذ يعيد المهمة للمنفذ مع التقرير والدرس</text>`;
+  const upArc = (from,to,top,out,cls,mk,text,rot) => {
+    const a=P[from], b=P[to]; let d,lx,ly;
+    if(wide){ const y0=a.y-nh/2; d=`M${a.x},${y0} C${a.x},${top} ${b.x},${top} ${b.x},${b.y-nh/2-3}`; lx=(a.x+b.x)/2; ly=top+16; }
+    else { const x0=a.x+nw/2; d=`M${x0},${a.y} C${out},${a.y} ${out},${b.y} ${b.x+nw/2+3},${b.y}`; lx=out-8; ly=(a.y+b.y)/2; }
+    s += `<path class="r ${cls}" d="${d}" marker-end="url(#m-${mk})"/>`;
+    if(text) s += `<text class="rl ${cls==="r-idle"?"rl-idle":cls==="r-plan"?"rl-plan":"rl-hot"}" x="${lx}" y="${ly}" text-anchor="middle"${rot&&!wide?` transform="rotate(90 ${lx} ${ly})"`:""}>${text}</text>`;
+  };
+  { const cls = planHot?"r-plan":planBack?"r-used":"r-idle"; upArc("reviewer","planner",18,W-6,cls,cls==="r-idle"?"idle":"warn", wide?`خطأ في الخطة يعود للمخطط${planBack?` (${planBack}×)`:""}`:"خطأ في الخطة", true); }
+  { const cls = hotTests?"r-hot":failTests?"r-used":"r-idle"; upArc("tester","test-writer",62,W-34,cls,cls==="r-idle"?"idle":"bad", wide?`اختبارات ناقصة أو خاطئة تعود لكاتبها${failTests?` (${failTests}×)`:""}`:(failTests?`${failTests}×`:""), false); }
+  { const cls = hotDispute?"r-plan":disputes?"r-used":"r-idle"; upArc("implementer","test-writer",118,W-62,cls,cls==="r-idle"?"idle":"warn", wide&&(disputes||hotDispute)?`اعتراض ${disputes}×`:"", false); }
+  for(const n of nodes){
+    const p=P[n], st=status(n), name = n==="done"?"منجزة":n==="planner"&&(S.phase==="discovery"||S.plan?.mode==="interactive")&&cur?.agent!=="planner"?"الاكتشاف":AG[n].n;
+    s += `<g class="nd n-${st}">`;
+    if(n==="gate"){ const r=nw/2,q=nh/2; s += `<path class="shape" d="M${p.x-r+14},${p.y-q} L${p.x+r-14},${p.y-q} L${p.x+r},${p.y} L${p.x+r-14},${p.y+q} L${p.x-r+14},${p.y+q} L${p.x-r},${p.y} Z"/>`; }
+    else s += `<rect x="${p.x-nw/2}" y="${p.y-nh/2}" width="${nw}" height="${nh}" rx="${n==="done"?nh/2:6}"/>`;
+    s += `<text x="${p.x}" y="${p.y-(wide?16:10)}" text-anchor="middle" font-size="14" font-weight="700">${name}</text>`;
+    s += `<text class="stt" x="${p.x}" y="${p.y+(wide?5:8)}" text-anchor="middle">${label(n,st)}</text>`;
+    if(sub(n)) s += `<text class="md" x="${p.x}" y="${p.y+24}" text-anchor="middle">${esc(sub(n))}</text>`;
+    if(n==="test-writer"&&testGateFails) s += `<text class="rl rl-hot" x="${p.x}" y="${p.y+nh/2+16}" text-anchor="middle">رفضت البوابة ${testGateFails}×</text>`;
+    s += `</g>`;
+  }
+  if(!F && S.phase!=="planning") s += `<text x="${W/2}" y="${H-10}" text-anchor="middle" class="md">لا توجد مهمة لعرضها</text>`;
+  return s + `</svg>`;
+}
+
+// ---------- live data (works from file://, no server) ----------
+let lastGen = null;
+function load(){
+  const el = document.createElement("script");
+  el.src = "data.js?t=" + Date.now();
+  el.onload = () => { const g = window.FACTORY?.generatedAt; if(g !== lastGen){ lastGen = g; render(); } el.remove(); };
+  el.onerror = () => { if(!window.FACTORY) document.getElementById("view").innerHTML = '<div class="panel">لم يُعثر على factory/data.js. ابدأ المصنع بأمر <b>claude --agent orchestrator</b> أو <b>/factory</b>.</div>'; el.remove(); };
+  document.head.appendChild(el);
+}
+load(); setInterval(load, 4000);
+let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz = setTimeout(render,150); });
+</script>
+</body>
+</html>

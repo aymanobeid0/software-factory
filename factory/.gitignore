@@ -1,0 +1,7 @@
+# Runtime files the factory rewrites on every step. Keep them out of git.
+# Commit the rest: spec, tickets, reports, lessons, retro: they are the project's history.
+state.json
+usage.json
+data.js
+guard-log.jsonl
+skills-status.json

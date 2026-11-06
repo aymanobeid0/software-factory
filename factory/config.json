@@ -1,0 +1,67 @@
+{
+  "language": "ar",
+  "discovery": "interactive",
+  "_discovery_note": "interactive: the plan is written in a live discovery session with the human (claude --agent discovery). planner: the planner subagent writes it alone, asking questions through files (for unattended runs).",
+  "maxAttempts": 3,
+  "maxQuestionRounds": 2,
+  "maxFinalRounds": 2,
+  "models": {
+    "planner": "opus",
+    "test-writer": "sonnet",
+    "implementer": "sonnet",
+    "tester": "haiku",
+    "auditor": "sonnet",
+    "reviewer": "opus",
+    "final-reviewer": "opus",
+    "orchestrator": "sonnet",
+    "discovery": "opus",
+    "retro": "opus",
+    "diagnoser": "opus"
+  },
+  "effort": {
+    "_note": "Reasoning level per agent: low | medium | high | xhigh | max. Rule: Opus agents think at medium (the model is strong enough), Sonnet and Haiku agents at high.",
+    "orchestrator": "high",
+    "planner": "medium",
+    "test-writer": "high",
+    "implementer": "high",
+    "tester": "high",
+    "auditor": "high",
+    "reviewer": "medium",
+    "final-reviewer": "medium",
+    "discovery": "medium",
+    "retro": "medium",
+    "diagnoser": "medium"
+  },
+  "effortEscalation": {
+    "_note": "On rework, the agent redoing the work thinks one level harder per extra attempt, up to max.",
+    "enabled": true,
+    "agents": [
+      "implementer",
+      "test-writer",
+      "diagnoser"
+    ],
+    "max": "xhigh"
+  },
+  "checks": {
+    "typecheck": "",
+    "lint": "",
+    "test": ""
+  },
+  "acceptance": {
+    "_note": "Acceptance tests are written by the test-writer, locked by hash, and must fail before implementation and pass after. {dir} becomes <dir>/<ticket>. The planner fills command if empty.",
+    "dir": "tests/acceptance",
+    "command": ""
+  },
+  "gates": {
+    "_note": "Deterministic gates run by factory.mjs, no model involved. checks above are run after every implementer PASS and again before a ticket is marked done.",
+    "checkTimeoutSec": 900,
+    "recheckBeforeDone": true
+  },
+  "prices_per_million_tokens": {
+    "_note": "Optional. Fill from https://www.anthropic.com/pricing to show cost in the dashboard. Keys are model-name substrings, e.g. \"opus\": {\"input\": 0, \"output\": 0, \"cacheWrite\": 0, \"cacheRead\": 0}"
+  },
+  "retro": {
+    "_note": "After the final review passes, the retro agent proposes improvements to the factory environment; the human accepts some; the retro applies exactly those.",
+    "enabled": true
+  }
+}
